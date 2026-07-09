@@ -17,12 +17,13 @@
 ## 当前状态
 
 - [x] 需求说明（`软件需求说明.md`）
-- [ ] 解码核心（protocol.py / decoder.py）
-- [ ] tkinter GUI（gui.py）
-- [ ] CLI 模式（main.py）
-- [ ] 示例协议 + 示例数据生成脚本（examples/）
-- [ ] 自动化测试（tests/）
-- [ ] 打包脚本（build.sh / build.bat）+ README.md
+- [x] 解码核心（protocol.py / decoder.py）
+- [x] tkinter GUI（gui.py）
+- [x] CLI 模式（main.py）
+- [x] 示例协议 + 示例数据生成脚本（examples/）
+- [x] 自动化测试（tests/，35 项全绿）
+- [x] 打包脚本（build.sh / build.bat）+ README.md
+- [x] Git 版本控制 + VS Code 双平台调试配置
 
 ## 目标结构（需求文档第 4 节）
 
@@ -48,6 +49,29 @@ tests/test_decoder.py
 - CSV 输出编码为 `utf-8-sig`（带 BOM，Excel 直接打开不乱码）。
 - 解码核心（protocol/decoder）不得 import tkinter，保证 CLI 与测试可脱离显示环境运行。
 
+## 双平台开发（Ubuntu + Windows，长期硬性约束）
+
+用户日常在 Ubuntu 笔记本上开发调试，同时需要在 Windows 上开发调试并发布 Windows
+可执行程序。**后续所有功能开发都必须保证在两个平台上都能正常开发、调试、运行**，
+这条约束不因功能大小而豁免。具体要求：
+
+- **代码层面**：路径拼接一律用 `os.path`（已用，勿改用手写 `/` 或 `\` 拼接）；
+  禁止 import 任何 POSIX-only 标准库模块（`fcntl`/`pwd`/`grp`/`os.fork` 等）；
+  禁止硬编码 `/tmp`、`/home/...` 等 Linux 专属路径；临时文件用 `tempfile` 模块。
+- **`.vscode/` 配置是共享文件（已入库）**：不得在 `launch.json`/`settings.json`
+  里写绝对路径（如 `/usr/bin/python3`、`/tmp/xxx`）——两边签出后必须原样可用。
+  Python 解释器路径不写死，靠 VS Code 的 "Python: Select Interpreter" 由每台机器
+  各自选择（存在 VS Code 的本机状态里，不进 git）。
+- **Git 换行符**：仓库根目录 `.gitattributes` 已强制文本文件 `eol=lf`、二进制
+  文件（`.DAT`/`.bin`/`.pdf`）标记为 `binary`，防止 Windows 端 `core.autocrlf`
+  悄悄转换换行符（轻则整文件级别假 diff，重则损坏二进制协议数据/弄坏
+  `build.sh` 的 shebang）。新增文本类型的文件后缀如需要，同步补充规则。
+- **打包**：PyInstaller 不支持交叉编译，`.exe` 必须在 Windows 机器上跑
+  `build.bat` 产出，`build.sh` 只能在 Linux 上产出 ELF；两个脚本长期都要维护。
+- **命令差异**：Windows 命令行用 `python`（一般没有 `python3` 别名），
+  虚拟环境激活是 `.venv\Scripts\activate`（非 `source .venv/bin/activate`）；
+  写文档/示例命令时两边都要给出。
+
 ## 关键实现要点（来自需求）
 
 - 字段类型：整型/浮点各宽度、`bytes[N]`（hex 输出）、`char[N]`、`padding[N]`（跳过）；
@@ -66,20 +90,30 @@ tests/test_decoder.py
 ## 常用命令
 
 ```bash
+# Ubuntu / Linux
 python3 main.py                                   # 启动 GUI
 python3 main.py examples/sample_protocol.json data.bin -o out.csv   # CLI 解码
 python3 examples/gen_sample_data.py               # 生成测试用二进制数据
 python3 -m pytest tests/ -v                       # 跑测试（或 unittest）
-./build.sh                                        # Linux 打包；Windows 用 build.bat
+./build.sh                                        # 打包 Linux 可执行文件
+
+# Windows（cmd/PowerShell，命令是 python 不是 python3）
+python main.py
+python main.py examples\sample_protocol.json data.bin -o out.csv
+python examples\gen_sample_data.py
+python -m pytest tests\ -v
+build.bat                                          # 打包 Windows .exe
 ```
 
 ## 打包注意
 
 - PyInstaller 命令：`pyinstaller --onefile --windowed --name decode2csv main.py`
-- 不支持交叉编译：Windows `.exe` 必须在 Windows 上打包。本机为 Linux，
-  只能产出 Linux 可执行文件；build.bat 供用户在 Windows 侧使用。
-- 本机 Python 3.12 / tkinter 8.6 已可用；PyInstaller 未安装（Ubuntu 有 PEP 668
-  限制，建议在 venv 中 `pip install pyinstaller`）。
+- 不支持交叉编译：Windows `.exe` 必须在 Windows 上用 `build.bat` 打包；
+  Linux 上只能用 `build.sh` 产出 ELF 可执行文件。两条打包路径长期并存，
+  不能因为在其中一个平台上开发就让另一个平台的打包脚本失修。
+- Ubuntu 开发机 Python 3.12 / tkinter 8.6 已可用；PyInstaller 未安装（Ubuntu 有
+  PEP 668 限制，建议在 venv 中 `pip install pyinstaller`）。Windows 机器同样建议
+  用 venv 安装 PyInstaller，避免污染全局环境。
 
 ## 验收口径
 

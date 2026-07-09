@@ -1,0 +1,10 @@
+# 双平台（Ubuntu + Windows）开发：统一换行符为 LF，防止 Windows 端
+# core.autocrlf=true 在 checkout/commit 时悄悄转换换行符——
+# 轻则造成整文件级别的虚假 diff，重则损坏下面显式标记的二进制文件。
+* text=auto eol=lf
+
+# 二进制文件：禁止任何换行符转换，防止数据被静默损坏
+*.DAT binary
+*.dat binary
+*.bin binary
+*.pdf binary

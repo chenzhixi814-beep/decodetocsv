@@ -5,31 +5,51 @@
 
 ## 快速开始
 
+本项目在 Ubuntu 和 Windows 上均可开发/运行/打包，命令基本一致，唯一区别是
+Windows 下 Python 解释器一般叫 `python` 而不是 `python3`。
+
 ```bash
-# 启动图形界面
-python3 main.py
-
-# 命令行解码（单文件，默认输出 <数据文件名>.csv）
+# Ubuntu / Linux（python3）
+python3 main.py                                                      # 启动 GUI
 python3 main.py examples/sample_protocol.json examples/sample_data.bin
-
-# 命令行解码并指定输出路径（仅单文件时可用）
 python3 main.py examples/sample_protocol.json examples/sample_data.bin -o out.csv
-
-# 命令行解码多个文件（各自输出同名 .csv，不能加 -o）
-python3 main.py examples/sample_protocol.json a.bin b.bin
-
-# 生成示例二进制数据（“计算机字”帧，帧长 139 字节）
-python3 examples/gen_sample_data.py                      # 5 帧，无垃圾/坏帧
-python3 examples/gen_sample_data.py --garbage --bad-crc   # 含垃圾字节与一个坏 CRC 帧
-
-# 运行测试
+python3 main.py examples/sample_protocol.json a.bin b.bin            # 多文件，各自输出同名 .csv
+python3 examples/gen_sample_data.py                                  # 生成示例数据（5 帧）
+python3 examples/gen_sample_data.py --garbage --bad-crc              # 含垃圾字节与一个坏 CRC 帧
 python3 -m pytest tests/ -v
+```
+
+```bat
+:: Windows（cmd / PowerShell，命令是 python）
+python main.py
+python main.py examples\sample_protocol.json examples\sample_data.bin
+python main.py examples\sample_protocol.json examples\sample_data.bin -o out.csv
+python main.py examples\sample_protocol.json a.bin b.bin
+python examples\gen_sample_data.py
+python examples\gen_sample_data.py --garbage --bad-crc
+python -m pytest tests\ -v
 ```
 
 ## 依赖
 
 运行时仅使用 Python 标准库（`tkinter`/`struct`/`csv`/`json`/`threading`/`queue` 等），
 无需安装任何第三方包。`pyinstaller` 仅在打包成单文件可执行程序时需要。
+
+## 双平台开发（Ubuntu + Windows）
+
+本仓库同时在 Ubuntu 和 Windows 上开发调试，`.vscode/` 下的调试配置已入库共享：
+
+- 首次在某台机器上打开本项目，需手动执行一次命令面板 `Python: Select Interpreter`
+  选择本机的 Python（`.vscode/settings.json` 里刻意不写死解释器路径，避免另一个
+  平台打开时失效）。
+- `.vscode/launch.json` 提供 GUI/CLI/生成示例数据/pytest 等调试配置，全部用
+  `${workspaceFolder}`/`${file}` 等 VS Code 变量，两个平台无需改动即可直接用。
+- 仓库根目录的 `.gitattributes` 强制文本文件用 LF 换行、二进制文件
+  （`.DAT`/`.bin`/`.pdf`）禁止换行符转换——这是为了防止 Windows 端 Git 的
+  `core.autocrlf` 悄悄改写文件，破坏 `build.sh` 的 shebang 或损坏二进制协议数据。
+  新增文本类文件类型时，如有需要请同步更新 `.gitattributes`。
+- 新代码请只用 `os.path`（或 `pathlib`）处理路径，不要硬编码 `/tmp`、`C:\...`
+  之类平台专属路径，也不要引入 `fcntl`/`pwd` 等 POSIX-only 标准库模块。
 
 ## 协议配置文件
 

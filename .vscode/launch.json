@@ -17,9 +17,7 @@
       "program": "${workspaceFolder}/main.py",
       "args": [
         "examples/sample_protocol.json",
-        "examples/sample_data.bin",
-        "-o",
-        "/tmp/decode2csv_debug_out.csv"
+        "examples/sample_data.bin"
       ],
       "console": "integratedTerminal",
       "justMyCode": true,
