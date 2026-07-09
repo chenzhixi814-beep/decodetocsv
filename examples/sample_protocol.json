@@ -1,0 +1,35 @@
+{
+  "name": "计算机字（帧ID 0x3E）",
+  "description": "转录自《通讯协议文档.pdf》1.6.1 表7；LSB 即 scale",
+  "endian": "little",
+  "frame": {
+    "sync": "EB3E8500",
+    "checksum": { "type": "crc16-ccitt", "range": "frame", "on_fail": "drop" }
+  },
+  "fields": [
+    { "name": "frame_seq",      "type": "uint8" },
+    { "name": "utc_year",       "type": "uint16" },
+    { "name": "utc_month",      "type": "uint8" },
+    { "name": "utc_day",        "type": "uint8" },
+    { "name": "utc_hour",       "type": "uint8" },
+    { "name": "utc_minute",     "type": "uint8" },
+    { "name": "utc_second",     "type": "uint32", "scale": 0.001, "unit": "s" },
+    { "name": "task_time",      "type": "uint32", "unit": "ms" },
+    { "name": "pulse_task_time","type": "uint32", "unit": "ms" },
+    { "name": "gnss_fix_flag",  "type": "uint8" },
+    { "name": "effective_flg",  "type": "uint8",  "count": 3 },
+    { "name": "common_star_num","type": "uint8" },
+    { "name": "nav_err_code",   "type": "uint8" },
+    { "name": "vel",            "type": "int32", "count": 3, "scale": 0.001, "unit": "m/s" },
+    { "name": "pos",            "type": "int32", "count": 3, "scale": 0.001, "unit": "m" },
+    { "name": "dP_Bas",         "type": "int32", "count": 3, "scale": 0.001, "unit": "m" },
+    { "name": "dV_Bas",         "type": "int32", "count": 3, "scale": 0.001, "unit": "m/s" },
+    { "name": "dP_User",        "type": "int32", "count": 3, "scale": 0.001, "unit": "m" },
+    { "name": "dV_User",        "type": "int32", "count": 3, "scale": 0.001, "unit": "m/s" },
+    { "name": "dP_Relative",    "type": "int32", "count": 3, "scale": 0.001, "unit": "m" },
+    { "name": "dV_Relative",    "type": "int32", "count": 3, "scale": 0.001, "unit": "m/s" },
+    { "name": "ecef_px",        "type": "int32", "scale": 0.001, "unit": "m" },
+    { "name": "ecef_py",        "type": "int32", "scale": 0.001, "unit": "m" },
+    { "name": "ecef_pz",        "type": "int32", "scale": 0.001, "unit": "m" }
+  ]
+}
