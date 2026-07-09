@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""按《通讯协议文档.pdf》生成“计算机字”帧的示例二进制数据。
+"""按《COMMUNICATION_PROTOCOL.pdf》生成“计算机字”帧的示例二进制数据。
 
 配合 examples/sample_protocol.json 使用：用本脚本生成数据，再用
 decode2csv 解码，CSV 数值应与生成时写入的物理值一致（经 LSB 换算）。

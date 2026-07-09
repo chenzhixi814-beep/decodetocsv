@@ -1,6 +1,6 @@
 {
   "name": "计算机字（帧ID 0x3E）",
-  "description": "转录自《通讯协议文档.pdf》1.6.1 表7；LSB 即 scale",
+  "description": "转录自《COMMUNICATION_PROTOCOL.pdf》1.6.1 表7；LSB 即 scale",
   "endian": "little",
   "frame": {
     "sync": "EB3E8500",

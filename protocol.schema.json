@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/chenzhixi814-beep/decodetocsv/protocol.schema.json",
   "title": "decode2csv 协议配置文件",
-  "description": "编辑器实时校验/自动补全用；权威语义与更细的跨字段约束（如帧长≥1）以 decode2csv/protocol.py 运行时校验为准，见《软件需求说明.md》第 2.3 节与《协议修改指南.md》。",
+  "description": "编辑器实时校验/自动补全用；权威语义与更细的跨字段约束（如帧长≥1）以 decode2csv/protocol.py 运行时校验为准，见《REQUIREMENTS.md》第 2.3 节与《PROTOCOL_GUIDE.md》。",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "fields"],
@@ -38,7 +38,7 @@
         "sync": {
           "type": "string",
           "pattern": "^\\s*([0-9a-fA-F]{2}\\s*)+$",
-          "description": "十六进制同步字，偶数个 hex 字符（可含空格，大小写不敏感），至少 1 字节。注意：若同步字里包含随字段变化的字节（如内嵌的数据长度），改字段后必须同步改这里，见《协议修改指南.md》2.8 节"
+          "description": "十六进制同步字，偶数个 hex 字符（可含空格，大小写不敏感），至少 1 字节。注意：若同步字里包含随字段变化的字节（如内嵌的数据长度），改字段后必须同步改这里，见《PROTOCOL_GUIDE.md》2.8 节"
         },
         "checksum": { "$ref": "#/definitions/checksum" }
       }

@@ -1,7 +1,7 @@
 # decode2csv
 
 由协议配置文件驱动的通用二进制解码工具。选择一个协议 JSON 和一个（或多个）原始
-二进制数据文件，按协议逐帧解析并输出 CSV。完整需求见 `软件需求说明.md`。
+二进制数据文件，按协议逐帧解析并输出 CSV。完整需求见 `REQUIREMENTS.md`。
 
 ## 快速开始
 
@@ -53,8 +53,8 @@ python -m pytest tests\ -v
 
 ## 协议配置文件
 
-协议为 UTF-8 编码（允许带 BOM）的 JSON 文件，完整键定义见 `软件需求说明.md` 第 2.3
-节，示例见 `examples/sample_protocol.json`（`软件需求说明.md` 附录 B）。核心结构：
+协议为 UTF-8 编码（允许带 BOM）的 JSON 文件，完整键定义见 `REQUIREMENTS.md` 第 2.3
+节，示例见 `examples/sample_protocol.json`（`REQUIREMENTS.md` 附录 B）。核心结构：
 
 ```json
 {
@@ -76,7 +76,7 @@ python -m pytest tests\ -v
 顶层、`frame`、`checksum`、每个字段对象中出现表外的键都会被拒绝加载并给出中文错误
 （含出错位置、字段名、键名），防止拼写错误静默失效。
 
-**协议变更后要怎么手动改这个 JSON、改完怎么验证，见 [`协议修改指南.md`](协议修改指南.md)**
+**协议变更后要怎么手动改这个 JSON、改完怎么验证，见 [`PROTOCOL_GUIDE.md`](PROTOCOL_GUIDE.md)**
 （按场景给了操作步骤 + 真实报错文案对照表 + 一个完整改造示例）。
 
 仓库根目录的 `protocol.schema.json` 是配套的 JSON Schema，在 VS Code 里编辑

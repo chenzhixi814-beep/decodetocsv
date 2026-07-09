@@ -4,7 +4,7 @@
 - **日期**：2026-07-09
 - **实现语言**：Python 3（≥3.10）
 - **交付形式**：源码 + 单文件可执行程序（PyInstaller 打包，可在无 Python 环境的电脑上运行）
-- **参考协议**：仓库内《通讯协议文档.pdf》（帧头 EB + 帧ID + 数据长度 + 数据 + CRC16）。
+- **参考协议**：仓库内《COMMUNICATION_PROTOCOL.pdf》（帧头 EB + 帧ID + 数据长度 + 数据 + CRC16）。
   本文档已将其关键信息（帧结构、CRC 算法、示例帧型）完整转录，实现时**以本文档为准**，无需再读 PDF。
 
 > **给实现者（AI agent）的说明**：本文档是唯一权威依据。所有"必须/不得/默认"均为硬性要求；
@@ -108,7 +108,7 @@
 **帧长自动计算**：`帧长 = sync 字节数 + Σ(字段字节数 × count) + 校验字节数`
 （sum8/xor8 为 1 字节，crc16 为 2 字节）。协议加载后帧长必须 ≥1，同步字模式下
 校验值紧跟在最后一个字段之后。CRC16 校验值本身按协议字节序存储读取
-（《通讯协议文档.pdf》为小端）。
+（《COMMUNICATION_PROTOCOL.pdf》为小端）。
 
 **协议加载错误报告**（NFR-3 的细化）：加载/校验失败时给出中文错误，必须包含：
 出错位置（如 `fields[3]`，从 0 计数）、字段名（若有）、出错的键名、期望值与实际值。
@@ -127,7 +127,7 @@ JSON 语法错误时报告行号。
 
 ## 4. 数据类型与值输出规则
 
-### 4.1 位与字节约定（转录自《通讯协议文档.pdf》1.1/1.2）
+### 4.1 位与字节约定（转录自《COMMUNICATION_PROTOCOL.pdf》1.1/1.2）
 
 字节内 bit0 为最低位、bit7 为最高位。多字节数据默认小端（低字节在前）。
 有符号整数为补码。浮点为 IEEE 754。
@@ -235,31 +235,31 @@ JSON 语法错误时报告行号。
 |------|------|----------------------|
 | `sum8` | 所有字节累加和的低 8 位 | `0xDD` |
 | `xor8` | 所有字节异或 | `0x31` |
-| `crc16-ccitt` | CRC-16/XMODEM：多项式 0x1021，初值 **0x0000**，输入/输出不反转，无最终异或。**即《通讯协议文档.pdf》附录 A 的算法** | `0x31C3` |
+| `crc16-ccitt` | CRC-16/XMODEM：多项式 0x1021，初值 **0x0000**，输入/输出不反转，无最终异或。**即《COMMUNICATION_PROTOCOL.pdf》附录 A 的算法** | `0x31C3` |
 | `crc16-modbus` | 多项式 0x8005（反射 0xA001），初值 0xFFFF，输入/输出反转，无最终异或 | `0x4B37` |
 
-附加测试向量（来自《通讯协议文档.pdf》附录 A.2，必须写入单元测试）：
+附加测试向量（来自《COMMUNICATION_PROTOCOL.pdf》附录 A.2，必须写入单元测试）：
 `crc16-ccitt(b"abcdefg1234567HIJKLMN") == 0xEEF7`。
 
 ## 7. 软件结构
 
 ```
 decodetocsv/
-├── 软件需求说明.md          # 本文档（权威依据）
-├── 通讯协议文档.pdf          # 目标协议原始文档（已转录进本文档，实现时无需再读）
-├── README.md                # 使用与打包说明（含 5.1 定长模式局限性说明）
-├── main.py                  # 入口：无参数启动 GUI，带参数走 CLI（argparse）
+├── REQUIREMENTS.md               # 本文档（权威依据）
+├── COMMUNICATION_PROTOCOL.pdf    # 目标协议原始文档（已转录进本文档，实现时无需再读）
+├── README.md                     # 使用与打包说明（含 5.1 定长模式局限性说明）
+├── main.py                       # 入口：无参数启动 GUI，带参数走 CLI（argparse）
 ├── decode2csv/
-│   ├── __init__.py          # __version__
-│   ├── protocol.py          # 协议 JSON 加载与校验 → Protocol 对象（帧长、struct 格式、校验函数）
-│   ├── decoder.py           # 流式解码：bytes → 帧 → CSV 行（不 import tkinter）
-│   └── gui.py               # tkinter 界面，调用 decoder
+│   ├── __init__.py               # __version__
+│   ├── protocol.py               # 协议 JSON 加载与校验 → Protocol 对象（帧长、struct 格式、校验函数）
+│   ├── decoder.py                # 流式解码：bytes → 帧 → CSV 行（不 import tkinter）
+│   └── gui.py                    # tkinter 界面，调用 decoder
 ├── examples/
-│   ├── sample_protocol.json # 附录 B 的"计算机字"协议
-│   └── gen_sample_data.py   # 按《通讯协议文档.pdf》生成测试数据（见第 9 节）
+│   ├── sample_protocol.json      # 附录 B 的"计算机字"协议
+│   └── gen_sample_data.py        # 按《COMMUNICATION_PROTOCOL.pdf》生成测试数据（见第 9 节）
 ├── tests/
-│   └── test_decoder.py      # 覆盖 5.4 全部场景 + 第 6 节测试向量
-└── build.sh / build.bat     # PyInstaller 一键打包脚本
+│   └── test_decoder.py           # 覆盖 5.4 全部场景 + 第 6 节测试向量
+└── build.sh / build.bat          # PyInstaller 一键打包脚本
 ```
 
 ## 8. 打包与发布
@@ -284,7 +284,7 @@ decodetocsv/
 
 ---
 
-## 附录 A：帧结构（转录自《通讯协议文档.pdf》1.4）
+## 附录 A：帧结构（转录自《COMMUNICATION_PROTOCOL.pdf》1.4）
 
 | 序号 | 名称 | 起始 | 字节数 | 类型 | 说明 |
 |------|------|------|--------|------|------|
@@ -303,7 +303,7 @@ decodetocsv/
 ```json
 {
   "name": "计算机字（帧ID 0x3E）",
-  "description": "转录自《通讯协议文档.pdf》1.6.1 表7；LSB 即 scale",
+  "description": "转录自《COMMUNICATION_PROTOCOL.pdf》1.6.1 表7；LSB 即 scale",
   "endian": "little",
   "frame": {
     "sync": "EB3E8500",
