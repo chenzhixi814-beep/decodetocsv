@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/chenzhixi814-beep/decodetocsv/protocol.schema.json",
+  "title": "decode2csv 协议配置文件",
+  "description": "编辑器实时校验/自动补全用；权威语义与更细的跨字段约束（如帧长≥1）以 decode2csv/protocol.py 运行时校验为准，见《软件需求说明.md》第 2.3 节与《协议修改指南.md》。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "fields"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "协议名，显示在 GUI 摘要里"
+    },
+    "description": {
+      "type": "string",
+      "description": "说明文字，仅展示，不参与解析"
+    },
+    "endian": {
+      "enum": ["little", "big"],
+      "default": "little",
+      "description": "整体字节序，单字段可用 fields[].endian 覆盖"
+    },
+    "frame": { "$ref": "#/definitions/frame" },
+    "fields": {
+      "type": "array",
+      "minItems": 1,
+      "description": "按帧内先后顺序排列，缺一不可、顺序不能错",
+      "items": { "$ref": "#/definitions/field" }
+    }
+  },
+  "definitions": {
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "缺省 = 无同步字、无校验（定长顺序模式）",
+      "properties": {
+        "sync": {
+          "type": "string",
+          "pattern": "^\\s*([0-9a-fA-F]{2}\\s*)+$",
+          "description": "十六进制同步字，偶数个 hex 字符（可含空格，大小写不敏感），至少 1 字节。注意：若同步字里包含随字段变化的字节（如内嵌的数据长度），改字段后必须同步改这里，见《协议修改指南.md》2.8 节"
+        },
+        "checksum": { "$ref": "#/definitions/checksum" }
+      }
+    },
+    "checksum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["sum8", "xor8", "crc16-ccitt", "crc16-modbus"],
+          "description": "crc16-ccitt = CRC-16/XMODEM，poly 0x1021，初值 0x0000，不反转"
+        },
+        "range": {
+          "enum": ["frame", "payload"],
+          "default": "frame",
+          "description": "frame=同步字起到最后字段末尾（默认）；payload=仅字段区，不含同步字"
+        },
+        "on_fail": {
+          "enum": ["drop", "keep"],
+          "default": "drop",
+          "description": "drop=校验失败整帧丢弃；keep=仍输出，CSV 追加\"校验\"列 OK/FAIL"
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CSV 列名，协议内不得重复"
+        },
+        "type": {
+          "enum": [
+            "uint8", "int8", "uint16", "int16",
+            "uint32", "int32", "uint64", "int64",
+            "float32", "float64", "bytes", "char", "padding"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "仅 bytes/char/padding 必填（字节数）；其他类型不得出现"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "数组长度；padding 不得出现"
+        },
+        "scale": {
+          "type": "number",
+          "default": 1,
+          "description": "仅整型/浮点型可用：物理值 = 原始值 × scale + offset"
+        },
+        "offset": {
+          "type": "number",
+          "default": 0,
+          "description": "仅整型/浮点型可用"
+        },
+        "unit": {
+          "type": "string",
+          "description": "附加到 CSV 表头，如 vel[0](m/s)"
+        },
+        "endian": {
+          "enum": ["little", "big"],
+          "description": "覆盖整体字节序，仅本字段生效"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "enum": ["bytes", "char", "padding"] } },
+            "required": ["type"]
+          },
+          "then": { "required": ["size"] },
+          "else": { "not": { "required": ["size"] } }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "padding" } },
+            "required": ["type"]
+          },
+          "then": { "not": { "required": ["count"] } }
+        },
+        {
+          "if": {
+            "properties": { "type": { "enum": ["bytes", "char", "padding"] } },
+            "required": ["type"]
+          },
+          "then": {
+            "not": { "anyOf": [{ "required": ["scale"] }, { "required": ["offset"] }] }
+          }
+        }
+      ]
+    }
+  }
+}

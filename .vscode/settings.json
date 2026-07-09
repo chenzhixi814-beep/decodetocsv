@@ -7,5 +7,11 @@
     "**/__pycache__": true,
     "**/*.pyc": true,
     ".pytest_cache": true
-  }
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["**/*_protocol.json"],
+      "url": "./protocol.schema.json"
+    }
+  ]
 }

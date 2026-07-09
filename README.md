@@ -79,6 +79,14 @@ python -m pytest tests\ -v
 **协议变更后要怎么手动改这个 JSON、改完怎么验证，见 [`协议修改指南.md`](协议修改指南.md)**
 （按场景给了操作步骤 + 真实报错文案对照表 + 一个完整改造示例）。
 
+仓库根目录的 `protocol.schema.json` 是配套的 JSON Schema，在 VS Code 里编辑
+**文件名以 `_protocol.json` 结尾**的协议文件（如 `sample_protocol.json`）会
+自动获得实时校验和字段名/取值自动补全（映射配置在 `.vscode/settings.json`
+的 `json.schemas` 里），不需要在协议文件里加任何额外的键。这只是编辑器侧的
+提前预警，权威校验仍然是 `decode2csv/protocol.py` 在真正加载协议时做的那一遍
+（有些跨字段约束如"帧长必须 ≥1"，JSON Schema 表达不了）。新建协议文件时按
+这个命名规则起名就能自动享受到校验。
+
 ## 帧定位模式
 
 - **无 `frame.sync`（定长顺序模式）**：从文件第 0 字节起按帧长连续切分。
