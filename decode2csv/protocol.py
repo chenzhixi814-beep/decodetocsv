@@ -279,6 +279,13 @@ def _is_nonempty_str(v) -> bool:
     return isinstance(v, str) and v.strip() != ""
 
 
+def _actual(v) -> str:
+    """格式化报错信息里"实际为 ..."的值：字符串用双引号包裹，其余用 repr。"""
+    if isinstance(v, str):
+        return f'"{v}"'
+    return repr(v)
+
+
 def load_protocol(path: str) -> Protocol:
     """从 JSON 文件加载并校验协议，失败抛出 ProtocolError（中文，含定位信息）。"""
     try:
@@ -313,20 +320,20 @@ def _build_protocol(data) -> Protocol:
         _err(f"存在未知键：{', '.join(sorted(extra))}")
 
     if "name" not in data or not _is_nonempty_str(data["name"]):
-        _err(f"\"name\" 必须为非空字符串，实际为 {data.get('name')!r}")
+        _err(f"\"name\" 必须为非空字符串，实际为 {_actual(data.get('name'))}")
     name = data["name"]
 
     description = data.get("description", "")
     if "description" in data and not isinstance(description, str):
-        _err(f"\"description\" 必须为字符串，实际为 {description!r}")
+        _err(f"\"description\" 必须为字符串，实际为 {_actual(description)}")
 
     endian = data.get("endian", "little")
     if endian not in ("little", "big"):
-        _err(f"\"endian\" 必须为 \"little\" 或 \"big\"，实际为 {endian!r}")
+        _err(f"\"endian\" 必须为 \"little\" 或 \"big\"，实际为 {_actual(endian)}")
 
     frame_data = data.get("frame", {})
     if not isinstance(frame_data, dict):
-        _err(f"\"frame\" 必须为 JSON 对象，实际为 {frame_data!r}")
+        _err(f"\"frame\" 必须为 JSON 对象，实际为 {_actual(frame_data)}")
     extra = set(frame_data) - ALLOWED_FRAME_KEYS
     if extra:
         _err(f"\"frame\" 中存在未知键：{', '.join(sorted(extra))}")
@@ -335,17 +342,17 @@ def _build_protocol(data) -> Protocol:
     if "sync" in frame_data:
         sync_raw = frame_data["sync"]
         if not isinstance(sync_raw, str):
-            _err(f"\"frame.sync\" 必须为十六进制字符串，实际为 {sync_raw!r}")
+            _err(f"\"frame.sync\" 必须为十六进制字符串，实际为 {_actual(sync_raw)}")
         cleaned = re.sub(r"\s+", "", sync_raw)
         if not re.fullmatch(r"[0-9a-fA-F]*", cleaned) or len(cleaned) < 2 or len(cleaned) % 2 != 0:
-            _err(f"\"frame.sync\" 必须为偶数个十六进制字符且至少 1 字节，实际为 {sync_raw!r}")
+            _err(f"\"frame.sync\" 必须为偶数个十六进制字符且至少 1 字节，实际为 {_actual(sync_raw)}")
         sync_bytes = bytes.fromhex(cleaned)
 
     checksum: Optional[ChecksumSpec] = None
     if "checksum" in frame_data:
         cs = frame_data["checksum"]
         if not isinstance(cs, dict):
-            _err(f"\"frame.checksum\" 必须为 JSON 对象，实际为 {cs!r}")
+            _err(f"\"frame.checksum\" 必须为 JSON 对象，实际为 {_actual(cs)}")
         extra = set(cs) - ALLOWED_CHECKSUM_KEYS
         if extra:
             _err(f"\"frame.checksum\" 中存在未知键：{', '.join(sorted(extra))}")
@@ -353,13 +360,13 @@ def _build_protocol(data) -> Protocol:
             _err("\"frame.checksum.type\" 为必填")
         cs_type = cs["type"]
         if cs_type not in CHECKSUM_FUNCS:
-            _err(f"\"frame.checksum.type\" 必须为 {sorted(CHECKSUM_FUNCS)} 之一，实际为 {cs_type!r}")
+            _err(f"\"frame.checksum.type\" 必须为 {sorted(CHECKSUM_FUNCS)} 之一，实际为 {_actual(cs_type)}")
         cs_range = cs.get("range", "frame")
         if cs_range not in ("frame", "payload"):
-            _err(f"\"frame.checksum.range\" 必须为 \"frame\" 或 \"payload\"，实际为 {cs_range!r}")
+            _err(f"\"frame.checksum.range\" 必须为 \"frame\" 或 \"payload\"，实际为 {_actual(cs_range)}")
         cs_on_fail = cs.get("on_fail", "drop")
         if cs_on_fail not in ("drop", "keep"):
-            _err(f"\"frame.checksum.on_fail\" 必须为 \"drop\" 或 \"keep\"，实际为 {cs_on_fail!r}")
+            _err(f"\"frame.checksum.on_fail\" 必须为 \"drop\" 或 \"keep\"，实际为 {_actual(cs_on_fail)}")
         checksum = ChecksumSpec(type=cs_type, range=cs_range, on_fail=cs_on_fail)
 
     fields_data = data.get("fields")
@@ -371,15 +378,15 @@ def _build_protocol(data) -> Protocol:
     for i, fd in enumerate(fields_data):
         loc = f"fields[{i}]"
         if not isinstance(fd, dict):
-            _err(f"{loc} 必须为 JSON 对象，实际为 {fd!r}")
+            _err(f"{loc} 必须为 JSON 对象，实际为 {_actual(fd)}")
 
         extra = set(fd) - ALLOWED_FIELD_KEYS
         if extra:
-            name_hint = f"（名称 {fd.get('name')!r}）" if "name" in fd else ""
+            name_hint = f"（名称 {_actual(fd.get('name'))}）" if "name" in fd else ""
             _err(f"{loc}{name_hint} 存在未知键：{', '.join(sorted(extra))}")
 
         if "name" not in fd or not _is_nonempty_str(fd["name"]):
-            _err(f"{loc} 的 \"name\" 必须为非空字符串，实际为 {fd.get('name')!r}")
+            _err(f"{loc} 的 \"name\" 必须为非空字符串，实际为 {_actual(fd.get('name'))}")
         f_name = fd["name"]
         loc_named = f"{loc}（名称 \"{f_name}\"）"
         if f_name in seen_names:
@@ -387,14 +394,14 @@ def _build_protocol(data) -> Protocol:
         seen_names.add(f_name)
 
         if "type" not in fd or fd["type"] not in FIELD_TYPES:
-            _err(f"{loc_named} 的 \"type\" 必须为 {sorted(FIELD_TYPES)} 之一，实际为 {fd.get('type')!r}")
+            _err(f"{loc_named} 的 \"type\" 必须为 {sorted(FIELD_TYPES)} 之一，实际为 {_actual(fd.get('type'))}")
         f_type = fd["type"]
         kind = FIELD_TYPES[f_type][2]
 
         needs_size = f_type in ("bytes", "char", "padding")
         if needs_size:
             if "size" not in fd or not _is_positive_int(fd["size"]):
-                _err(f"{loc_named} 的 \"size\" 必须为正整数，实际为 {fd.get('size')!r}")
+                _err(f"{loc_named} 的 \"size\" 必须为正整数，实际为 {_actual(fd.get('size'))}")
             f_size = fd["size"]
         else:
             if "size" in fd:
@@ -405,7 +412,7 @@ def _build_protocol(data) -> Protocol:
             _err(f"{loc_named} 的类型 \"padding\" 不得出现 \"count\"")
         f_count = fd.get("count", 1)
         if not _is_positive_int(f_count):
-            _err(f"{loc_named} 的 \"count\" 必须为正整数，实际为 {f_count!r}")
+            _err(f"{loc_named} 的 \"count\" 必须为正整数，实际为 {_actual(f_count)}")
 
         has_scale_or_offset = ("scale" in fd) or ("offset" in fd)
         if has_scale_or_offset and kind not in NUMERIC_KINDS:
@@ -413,18 +420,18 @@ def _build_protocol(data) -> Protocol:
             _err(f"{loc_named} 的类型 \"{f_type}\" 不允许出现 \"{bad_key}\"")
         f_scale = fd.get("scale", 1)
         if "scale" in fd and not _is_plain_number(f_scale):
-            _err(f"{loc_named} 的 \"scale\" 必须为数值，实际为 {f_scale!r}")
+            _err(f"{loc_named} 的 \"scale\" 必须为数值，实际为 {_actual(f_scale)}")
         f_offset = fd.get("offset", 0)
         if "offset" in fd and not _is_plain_number(f_offset):
-            _err(f"{loc_named} 的 \"offset\" 必须为数值，实际为 {f_offset!r}")
+            _err(f"{loc_named} 的 \"offset\" 必须为数值，实际为 {_actual(f_offset)}")
 
         f_unit = fd.get("unit")
         if "unit" in fd and not isinstance(f_unit, str):
-            _err(f"{loc_named} 的 \"unit\" 必须为字符串，实际为 {f_unit!r}")
+            _err(f"{loc_named} 的 \"unit\" 必须为字符串，实际为 {_actual(f_unit)}")
 
         f_endian = fd.get("endian")
         if "endian" in fd and f_endian not in ("little", "big"):
-            _err(f"{loc_named} 的 \"endian\" 必须为 \"little\" 或 \"big\"，实际为 {f_endian!r}")
+            _err(f"{loc_named} 的 \"endian\" 必须为 \"little\" 或 \"big\"，实际为 {_actual(f_endian)}")
 
         fields.append(Field(
             name=f_name,
